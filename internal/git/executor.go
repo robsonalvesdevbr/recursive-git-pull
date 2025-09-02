@@ -9,6 +9,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/robsonalvesdevbr/recursive-git-pull/internal/colors"
 	"github.com/robsonalvesdevbr/recursive-git-pull/pkg/types"
 )
 
@@ -89,7 +90,7 @@ func (e *Executor) executeSequentially(repositories []*types.Repository, command
 
 	for _, repo := range repositories {
 		if e.config.Verbose {
-			fmt.Printf("Executing 'git %s' in %s...\n", command, repo.Path)
+			fmt.Printf("%s %s\n", colors.Info("Executing 'git "+command+"' in"), colors.Dim(repo.Path+"..."))
 		}
 		
 		result := e.ExecuteCommand(repo, command)
@@ -116,7 +117,7 @@ func (e *Executor) executeInParallel(repositories []*types.Repository, command s
 			defer wg.Done()
 			for repo := range jobsCh {
 				if e.config.Verbose {
-					fmt.Printf("Executing 'git %s' in %s...\n", command, repo.Path)
+					fmt.Printf("%s %s\n", colors.Info("Executing 'git "+command+"' in"), colors.Dim(repo.Path+"..."))
 				}
 				
 				result := e.ExecuteCommand(repo, command)
@@ -224,20 +225,34 @@ func (e *Executor) pullAllBranches(repo *types.Repository, start time.Time) *typ
 	return result
 }
 
-// printResult prints the execution result
+// printResult prints the execution result with colors
 func (e *Executor) printResult(result *types.ExecutionResult) {
-	status := "✓"
-	if !result.Success {
-		status = "✗"
+	var icon, status string
+	if result.Success {
+		icon = colors.SuccessIcon()
+		status = colors.Success(result.Repository.Name)
+	} else {
+		icon = colors.ErrorIcon()
+		status = colors.Error(result.Repository.Name)
 	}
 	
-	fmt.Printf("%s %s (%v)\n", status, result.Repository.Name, result.Duration)
+	duration := colors.Dim(fmt.Sprintf("(%v)", result.Duration))
+	fmt.Printf("%s %s %s\n", icon, status, duration)
 	
 	if result.Error != "" {
-		fmt.Printf("  Error: %s\n", result.Error)
+		if strings.Contains(result.Error, "skipped") {
+			fmt.Printf("  %s %s\n", colors.WarningIcon(), colors.Warning(result.Error))
+		} else if strings.Contains(result.Error, "timed out") {
+			fmt.Printf("  %s %s\n", colors.WarningIcon(), colors.Warning(result.Error))
+		} else {
+			fmt.Printf("  %s %s\n", colors.ErrorIcon(), colors.Error(result.Error))
+		}
 	}
 	
 	if result.Output != "" && e.config.Verbose {
-		fmt.Printf("  Output: %s\n", strings.TrimSpace(result.Output))
+		output := strings.TrimSpace(result.Output)
+		if output != "" {
+			fmt.Printf("  %s %s\n", colors.InfoIcon(), colors.Dim(output))
+		}
 	}
 }

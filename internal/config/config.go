@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/robsonalvesdevbr/recursive-git-pull/internal/colors"
 	"github.com/robsonalvesdevbr/recursive-git-pull/pkg/types"
 )
 
@@ -30,6 +31,7 @@ func ParseFlags() *types.Config {
 	
 	flag.BoolVar(&config.Verbose, "verbose", false, "Verbose output")
 	flag.BoolVar(&config.AllBranches, "all-branches", false, "Pull all branches (only works with pull command)")
+	flag.BoolVar(&config.NoColor, "no-color", false, "Disable colored output")
 
 	var help bool
 	flag.BoolVar(&help, "help", false, "Show help")
@@ -44,28 +46,28 @@ func ParseFlags() *types.Config {
 
 	// Validate root path
 	if info, err := os.Stat(config.RootPath); err != nil {
-		fmt.Fprintf(os.Stderr, "Error: Invalid path '%s': %v\n", config.RootPath, err)
+		fmt.Fprintf(os.Stderr, "%s %s\n", colors.ErrorIcon(), colors.Error(fmt.Sprintf("Invalid path '%s': %v", config.RootPath, err)))
 		os.Exit(1)
 	} else if !info.IsDir() {
-		fmt.Fprintf(os.Stderr, "Error: Path '%s' is not a directory\n", config.RootPath)
+		fmt.Fprintf(os.Stderr, "%s %s\n", colors.ErrorIcon(), colors.Error(fmt.Sprintf("Path '%s' is not a directory", config.RootPath)))
 		os.Exit(1)
 	}
 
 	// Validate command
 	if config.Command == "" {
-		fmt.Fprintf(os.Stderr, "Error: Git command cannot be empty\n")
+		fmt.Fprintf(os.Stderr, "%s %s\n", colors.ErrorIcon(), colors.Error("Git command cannot be empty"))
 		os.Exit(1)
 	}
 
 	// Validate max workers
 	if config.MaxWorkers <= 0 {
-		fmt.Fprintf(os.Stderr, "Error: Number of workers must be positive\n")
+		fmt.Fprintf(os.Stderr, "%s %s\n", colors.ErrorIcon(), colors.Error("Number of workers must be positive"))
 		os.Exit(1)
 	}
 
 	// Parse timeout
 	if timeout, err := time.ParseDuration(timeoutStr); err != nil {
-		fmt.Fprintf(os.Stderr, "Invalid timeout format: %v\n", err)
+		fmt.Fprintf(os.Stderr, "%s %s\n", colors.ErrorIcon(), colors.Error(fmt.Sprintf("Invalid timeout format: %v", err)))
 		os.Exit(1)
 	} else {
 		config.Timeout = timeout
@@ -103,4 +105,8 @@ func showHelp() {
 	fmt.Println("  rgp -path ./projects -command status -parallel=false")
 	fmt.Println("  rgp -path ./repos -command pull -all-branches")
 	fmt.Println("  rgp -include '*-service' -exclude 'test-*'")
+	fmt.Println("  rgp -no-color -verbose  # Disable colors for scripting")
+	fmt.Println("")
+	fmt.Println("Environment variables:")
+	fmt.Println("  NO_COLOR  Set to any value to disable colors")
 }

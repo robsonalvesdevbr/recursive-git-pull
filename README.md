@@ -13,6 +13,7 @@ Uma ferramenta de linha de comando em Go para executar comandos Git recursivamen
 - Logs detalhados e relatórios de status
 - Funcionalidade especial para pull em todos os branches
 - Interface de linha de comando simples e intuitiva
+- Saída colorida para melhor legibilidade (verde=sucesso, vermelho=erro, amarelo=aviso)
 
 ## Instalação
 
@@ -53,6 +54,7 @@ rgp [opções]
 - `-exclude string`: Padrões para excluir repositórios (separados por vírgula)
 - `-all-branches`: Pull todos os branches (funciona apenas com comando pull)
 - `-verbose`: Saída detalhada
+- `-no-color`: Desabilitar cores na saída (útil para scripts)
 - `-help, -h`: Mostrar ajuda
 
 ### Exemplos
@@ -91,6 +93,14 @@ rgp -command "log --oneline -5" -timeout 10s -verbose
 
 ```bash
 rgp -command pull -ignore-dirty
+```
+
+#### 7. Desabilitar cores para uso em scripts
+
+```bash
+rgp -no-color -command status
+# ou usando variável de ambiente
+NO_COLOR=1 rgp -command status
 ```
 
 ## Estrutura do projeto

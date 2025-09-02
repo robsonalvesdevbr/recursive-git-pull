@@ -21,6 +21,7 @@ type Config struct {
 	ExcludePatterns  []string
 	Verbose          bool
 	AllBranches      bool
+	NoColor          bool
 }
 
 // ExecutionResult represents the result of command execution
